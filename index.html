@@ -394,7 +394,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 5;
+const SEED_V = 6;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -442,6 +442,14 @@ function migrate() {
         }
         if (!p.photo && s.photo) { p.photo = s.photo; changed = true; }
       }
+    }
+  }
+
+  // v6: force-sync photo from SEED (corrects any bad photo URL)
+  if (v < 6) {
+    for (const p of props) {
+      const s = seedMap[p.id];
+      if (s?.photo && p.photo !== s.photo) { p.photo = s.photo; changed = true; }
     }
   }
 
