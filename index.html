@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewHouse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #EEEEE8; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* HEADER */
+    header { background: #fff; border-bottom: 1px solid #E4E4DE; padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
+    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+    #count { font-size: 12px; color: #aaa; }
+
+    /* MAIN */
+    main { max-width: 1080px; margin: 0 auto; padding: 22px 18px 110px; }
+
+    /* GRID */
+    .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    @media(max-width:880px){ .grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:520px){ .grid { grid-template-columns: 1fr; } main { padding: 16px 12px 110px; } }
+
+    /* CARD */
+    .card {
+      background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.07);
+      display: flex; flex-direction: column;
+      transition: transform .17s, box-shadow .17s;
+      border: 1px solid rgba(0,0,0,.04);
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.08), 0 14px 36px rgba(0,0,0,.12); }
+
+    /* PHOTO */
+    .photo-wrap {
+      position: relative; width: 100%; aspect-ratio: 4/3;
+      background: #E4E4DE; overflow: hidden; cursor: pointer; flex-shrink: 0;
+    }
+    .photo-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+    .card:hover .photo-wrap img { transform: scale(1.04); }
+
+    /* Empty photo state */
+    .photo-empty {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      color: #bbb; font-size: 12px; font-weight: 500;
+      transition: background .2s, color .2s;
+    }
+    .photo-empty svg { transition: transform .2s; }
+    .photo-wrap:hover .photo-empty { background: rgba(0,0,0,.03); color: #888; }
+    .photo-wrap:hover .photo-empty svg { transform: scale(1.08); }
+    .photo-wrap.drag-over { outline: 3px dashed #1A5C42; outline-offset: -4px; }
+    .photo-wrap.drag-over .photo-empty { background: rgba(26,92,66,.06); color: #1A5C42; }
+
+
+    /* INFO */
+    .card-info { padding: 15px 15px 13px; flex: 1; display: flex; flex-direction: column; gap: 9px; }
+
+    .price-line { display: flex; flex-direction: column; gap: 2px; }
+    .price {
+      font-size: 22px; font-weight: 700; color: #1A5C42; letter-spacing: -.5px; line-height: 1;
+      border: none; background: none; font-family: inherit; outline: none; width: 100%; padding: 0; cursor: text;
+    }
+    .price::placeholder { color: #C2DDD5; font-weight: 500; font-size: 18px; }
+    .expensas {
+      font-size: 12.5px; color: #888;
+      border: none; background: none; font-family: inherit; outline: none; width: 100%; padding: 0; cursor: text;
+    }
+    .expensas::placeholder { color: #ccc; }
+
+    .divider { height: 1px; background: #EBEBEB; }
+
+    .address {
+      font-size: 14.5px; font-weight: 600; color: #111; line-height: 1.35; letter-spacing: -.2px;
+      border: none; background: none; font-family: inherit; outline: none; width: 100%; padding: 0;
+      resize: none; cursor: text;
+    }
+    .address::placeholder { color: #ccc; font-weight: 500; }
+
+    /* Chips */
+    .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 9px; border-radius: 100px;
+      background: #F0F0EA; font-size: 11.5px; font-weight: 500; color: #333; white-space: nowrap;
+    }
+
+    .card { cursor: pointer; }
+
+    /* ADD BAR */
+    .add-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
+      border-top: 1px solid #E4E4DE; padding: 12px 18px 12px;
+    }
+    .add-bar-inner { max-width: 1080px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+    .link-input {
+      flex: 1; border: 1.5px solid #E4E4DE; border-radius: 12px;
+      padding: 11px 14px 11px 40px; font-family: inherit; font-size: 13.5px;
+      color: #111; outline: none; transition: border-color .15s;
+      background: #F8F8F4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23bbb' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E") no-repeat 13px center;
+    }
+    .link-input::placeholder { color: #bbb; }
+    .link-input:focus { border-color: #1A5C42; background-color: #fff; }
+    .add-btn {
+      background: #1A5C42; color: #fff; border: none; border-radius: 12px;
+      padding: 11px 20px; font-family: inherit; font-size: 13.5px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      white-space: nowrap; transition: opacity .15s; flex-shrink: 0;
+    }
+    .add-btn:hover { opacity: .88; }
+    .add-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* EMPTY STATE */
+    .empty { grid-column:1/-1; text-align:center; padding:64px 20px; color:#bbb; font-size:13px; line-height:1.7; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 78px; left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: #111; color: #fff; padding: 8px 18px; border-radius: 100px;
+      font-size: 12.5px; font-weight: 500; opacity: 0;
+      transition: opacity .22s, transform .22s; pointer-events: none; white-space: nowrap; z-index: 99;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>NewHouse</h1>
+  <span id="count"></span>
+</header>
+
+<main><div class="grid" id="grid"></div></main>
+
+<div class="add-bar">
+  <div class="add-bar-inner">
+    <input class="link-input" id="link-input" type="url"
+           placeholder="Link Mercado Libre o similar"
+           onkeydown="if(event.key==='Enter')addProp()">
+    <button class="add-btn" id="add-btn" onclick="addProp()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Guardar
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ICONS ────────────────────────────────────────────────────────────────
+const I = {
+  bed:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v3"/><rect x="2" y="9" width="20" height="9" rx="1"/></svg>`,
+  bath: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-2 0v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+  area: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>`,
+  paw:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="4" cy="8" r="2"/><ellipse cx="7.5" cy="14" rx="2" ry="2"/><path d="M12 19c-2.5-2-6-1.5-6 .5 0 1.2 1 1.5 2 1.5 1.5 0 3-1 4-1s2.5 1 4 1c1 0 2-.3 2-1.5 0-2-3.5-2.5-6-.5z"/></svg>`,
+  gym:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="4" height="4" rx="1"/><rect x="18" y="10" width="4" height="4" rx="1"/><rect x="7" y="8" width="3" height="8" rx="1"/><rect x="14" y="8" width="3" height="8" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
+  car:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5a2 2 0 0 1 .34-1.1l2.32-4.4A2 2 0 0 1 7.44 5h9.12a2 2 0 0 1 1.78 1.1l2.32 4.4A2 2 0 0 1 21 12v5h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>`,
+  pool: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c1.67-2.67 3.33-2.67 5 0s3.33 2.67 5 0 3.33-2.67 5 0"/><path d="M2 17c1.67-2.67 3.33-2.67 5 0s3.33 2.67 5 0 3.33-2.67 5 0"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="8" y1="5" x2="8" y2="9"/><line x1="16" y1="5" x2="16" y2="9"/></svg>`,
+  photo:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  link: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>`,
+};
+
+const AMENITY_ICONS = { mascotas: I.paw, gym: I.gym, cochera: I.car, pool: I.pool };
+
+// ── STORAGE ──────────────────────────────────────────────────────────────
+function load() { try { return JSON.parse(localStorage.getItem('nh5')||'[]'); } catch { return []; } }
+function save(d) { try { localStorage.setItem('nh5', JSON.stringify(d)); } catch { toast('Almacenamiento lleno'); } }
+
+// ── URL PARSER ───────────────────────────────────────────────────────────
+function parseMLId(url) {
+  const m = url.match(/MLA-?(\d+)/i);
+  return m ? 'MLA' + m[1] : null;
+}
+
+function slugToInfo(url) {
+  try {
+    const slug = decodeURIComponent(url).split('/').pop().toLowerCase().replace(/_jm.*/,'').replace(/-/g,' ');
+    const barrios = { 'palermo hollywood':'Palermo Hollywood', 'palermo soho':'Palermo Soho', 'palermo':'Palermo', 'recoleta':'Recoleta', 'belgrano':'Belgrano', 'nunez':'Núñez', 'colegiales':'Colegiales', 'villa crespo':'Villa Crespo' };
+    let barrio = '';
+    for (const [k,v] of Object.entries(barrios)) { if (slug.includes(k)) { barrio = v; break; } }
+    const ambM = slug.match(/(\d)\s*amb/);
+    const ambientes = ambM ? parseInt(ambM[1]) : null;
+    const dormitorios = ambientes ? Math.max(1, ambientes - 1) : null;
+    const m2 = slug.match(/(\d{2,3})\s*m/); const metros = m2 ? parseInt(m2[1]) : null;
+    return { barrio, dormitorios, metros };
+  } catch { return {}; }
+}
+
+// ── CARD HTML ────────────────────────────────────────────────────────────
+function cardHTML(p) {
+  const photoContent = p.photo
+    ? `<img src="${esc(p.photo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const emptyStyle = p.photo ? 'style="display:none"' : '';
+
+  const chips = [
+    p.ambientes   ? `<span class="chip">${I.bed} ${p.ambientes} amb.</span>` : '',
+    p.banos       ? `<span class="chip">${I.bath} ${p.banos} ${p.banos===1?'baño':'baños'}</span>` : '',
+    p.metros      ? `<span class="chip">${I.area} ${p.metros}m²</span>` : '',
+    ...(p.amenities||[]).map(a => AMENITY_ICONS[a] ? `<span class="chip">${AMENITY_ICONS[a]}</span>` : ''),
+  ].filter(Boolean).join('');
+
+  const source = p.url?.includes('mercadolibre') ? '<span class="source-badge">Mercado Libre</span>' : '';
+
+  return `<div class="card" data-id="${esc(p.id)}" onclick="openListing('${esc(p.url)}',event)">
+  <div class="photo-wrap" id="pw-${esc(p.id)}"
+       ondragover="dragOver(event,'${esc(p.id)}')"
+       ondragleave="dragLeave('${esc(p.id)}')"
+       ondrop="dropPhoto(event,'${esc(p.id)}')">
+    ${photoContent}
+    <div class="photo-empty" ${emptyStyle}>
+      ${I.photo}
+      <span>Drag foto aquí</span>
+    </div>
+  </div>
+
+  <div class="card-info">
+    <div class="price-line">
+      <input class="price" value="${esc(p.precio||'')}" placeholder="US$ —"
+             onchange="updateField('${esc(p.id)}','precio',this.value)">
+      <input class="expensas" value="${esc(p.expensas||'')}" placeholder="Expensas: $ —"
+             onchange="updateField('${esc(p.id)}','expensas',this.value)">
+    </div>
+    <div class="divider"></div>
+    <textarea class="address" rows="2" placeholder="Dirección"
+              onchange="updateField('${esc(p.id)}','direccion',this.value)"
+    >${esc(p.direccion||'')}</textarea>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}
+  </div>
+</div>`;
+}
+
+function esc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ── RENDER ───────────────────────────────────────────────────────────────
+function render() {
+  const props = load();
+  document.getElementById('grid').innerHTML = props.length
+    ? props.map(cardHTML).join('')
+    : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en tu browser.</div>`;
+  document.getElementById('count').textContent = props.length ? props.length + (props.length===1?' depto':' deptos') : '';
+}
+
+// ── UPDATE FIELD ─────────────────────────────────────────────────────────
+function updateField(id, key, val) {
+  const props = load();
+  const p = props.find(x => x.id === id);
+  if (p) { p[key] = val; save(props); }
+}
+
+// ── OPEN LISTING ─────────────────────────────────────────────────────────
+function openListing(url, event) {
+  if (!url) return;
+  const tag = event.target.tagName.toLowerCase();
+  if (['input','textarea','button','select'].includes(tag)) return;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+// ── PHOTO ────────────────────────────────────────────────────────────────
+function setPhoto(id, src) {
+  const props = load();
+  const p = props.find(x => x.id === id);
+  if (!p) return;
+  p.photo = src;
+  save(props);
+  // update DOM
+  const pw = document.getElementById('pw-' + id);
+  if (!pw) return;
+  let img = pw.querySelector('img');
+  if (!img) { img = document.createElement('img'); pw.prepend(img); }
+  img.src = src; img.alt = ''; img.loading = 'lazy';
+  img.style.display = '';
+  img.onerror = () => { img.style.display='none'; pw.querySelector('.photo-empty').style.display='flex'; };
+  pw.querySelector('.photo-empty').style.display = 'none';
+  closeOverlay(id);
+  toast('Foto guardada ✓');
+}
+function dragOver(e, id) { e.preventDefault(); document.getElementById('pw-'+id)?.classList.add('drag-over'); }
+function dragLeave(id) { document.getElementById('pw-'+id)?.classList.remove('drag-over'); }
+function dropPhoto(e, id) {
+  e.preventDefault(); dragLeave(id);
+  const file = e.dataTransfer.files[0];
+  if (file?.type.startsWith('image/')) { processFile(id, file); return; }
+  const url = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+  if (url?.startsWith('http')) setPhoto(id, url);
+}
+function processFile(id, file) {
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX=1000, c=document.createElement('canvas');
+      let w=img.width, h=img.height;
+      if (w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+      setPhoto(id, c.toDataURL('image/jpeg',.85));
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+// ── ADD PROPERTY ─────────────────────────────────────────────────────────
+async function addProp() {
+  const input = document.getElementById('link-input');
+  const btn   = document.getElementById('add-btn');
+  const url   = input.value.trim();
+  if (!url) return;
+
+  const id = parseMLId(url) || ('custom-' + Date.now());
+  const props = load();
+  if (props.find(p => p.id === id)) { toast('Ya está guardado'); input.value=''; return; }
+
+  const { barrio, dormitorios, metros } = slugToInfo(url);
+  const prop = {
+    id, url,
+    photo: null,
+    precio: '', expensas: '',
+    direccion: barrio || '',
+    barrio: barrio || '',
+    dormitorios: dormitorios || null,
+    banos: null,
+    metros: metros || null,
+    amenities: [],
+  };
+
+  props.unshift(prop); // add to front
+  save(props);
+  render();
+  input.value = '';
+  toast('Depto guardado — agregá la foto desde ML ↑');
+}
+
+// ── PRE-SEED ──────────────────────────────────────────────────────────────
+const SEED = [
+  {
+    id:'MLA3377586038', barrio:'Belgrano', ambientes:3, banos:2, metros:77, amenities:['cochera','pool','mascotas'],
+    precio:'$1.850.000', expensas:'$ 584.920',
+    direccion:'Amenabar 2700, Belgrano',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_931955-MLA111295526654_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3377586038-deprartamento-3-ambientes-cochera-parrilla-luminoso-belgrano-_JM'
+  },
+  {
+    id:'MLA3337043752', barrio:'Villa Crespo', ambientes:3, banos:2, metros:68, amenities:['cochera','gym','pool'],
+    precio:'US$1.600', expensas:'',
+    direccion:'Av. Córdoba 4300, Villa Crespo',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_884616-MLA110887678924_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3337043752-dome-green-soho-3-amb-en-piso-alto-amenities-con-cochera-_JM'
+  },
+  {
+    id:'MLA3337508776', barrio:'Palermo Soho', ambientes:3, banos:2, metros:90, amenities:['cochera','gym','pool','mascotas'],
+    precio:'US$1.690', expensas:'$ 455.000',
+    direccion:'Scalabrini Ortiz 1600, Palermo Soho',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_837684-MLA110894095822_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3337508776-alquiler-departamento-tres-ambientes-palermo-soho-a-estrenar-con-amenities-_JM'
+  },
+  {
+    id:'MLA3336957980', barrio:'Recoleta', ambientes:3, banos:1, metros:88, amenities:[],
+    precio:'US$1.400', expensas:'$ 410.000',
+    direccion:'Schiaffino 2100, Recoleta',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_724131-MLA111853515237_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3336957980-alquiler-departamento-recoleta-3-ambientes-piso-alto-super-luminoso-_JM'
+  },
+  {
+    id:'MLA3112562764', barrio:'Palermo', ambientes:3, banos:2, metros:80, amenities:['gym','pool','mascotas'],
+    precio:'US$1.600', expensas:'$ 450.000',
+    direccion:'Quesada 1900, Palermo Hollywood',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_637824-MLA109638537133_032026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3112562764-alquiler-departamento-3-amb-en-palermo-_JM'
+  },
+  {
+    id:'MLA1747628065', barrio:'Palermo', ambientes:4, banos:2, metros:150, amenities:['mascotas'],
+    precio:'$2.800.000', expensas:'$ 436.545',
+    direccion:'Av. Santa Fe 3500, Palermo',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_810514-MLA110404996039_042026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-1747628065-departamento-4-ambientes-semipiso-luminoso-impecable-balcon-aterrazado-al-frente-en-palermo-_JM'
+  },
+];
+
+function seed() {
+  if (localStorage.getItem('nh5')) return;
+  save(SEED.map(s => ({ ...s })));
+}
+
+// ── MIGRATE ───────────────────────────────────────────────────────────────
+const SEED_V = 4;
+const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
+
+function migrate() {
+  const v = parseInt(localStorage.getItem('nh5_v') || '1');
+  if (v >= SEED_V) return;
+  let props = load();
+  const seedMap = Object.fromEntries(SEED.map(s => [s.id, s]));
+  let changed = false;
+
+  // v2: fill expensas + fix amenities
+  if (v < 2) {
+    for (const p of props) {
+      const s = seedMap[p.id];
+      if (!s) continue;
+      if (!p.expensas && s.expensas) { p.expensas = s.expensas; changed = true; }
+    }
+  }
+
+  // v3: remove expired listings
+  const before = props.length;
+  props = props.filter(p => !EXPIRED_IDS.has(p.id));
+  if (props.length !== before) changed = true;
+
+  // v4: add ambientes, sync amenities (mascotas)
+  if (v < 4) {
+    for (const p of props) {
+      const s = seedMap[p.id];
+      if (!s) continue;
+      if (!p.ambientes && s.ambientes) { p.ambientes = s.ambientes; changed = true; }
+      if (JSON.stringify(p.amenities) !== JSON.stringify(s.amenities)) { p.amenities = s.amenities; changed = true; }
+    }
+  }
+
+  if (changed) save(props);
+  localStorage.setItem('nh5_v', SEED_V);
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+seed();
+migrate();
+render();
+</script>
+</body>
+</html>
