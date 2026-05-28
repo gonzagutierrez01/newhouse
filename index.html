@@ -373,6 +373,13 @@ const SEED = [
     url:'https://departamento.mercadolibre.com.ar/MLA-3112562764-alquiler-departamento-3-amb-en-palermo-_JM'
   },
   {
+    id:'MLA1806510481', barrio:'Colegiales', ambientes:3, banos:3, metros:83, amenities:['cochera','gym','pool'],
+    precio:'US$1.500', expensas:'$ 220.000',
+    direccion:'Crámer 1682, Colegiales',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_679917-MLA111899839175_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-1806510481-3-ambientes-con-cochera-a-estrenar--_JM'
+  },
+  {
     id:'MLA1747628065', barrio:'Palermo', ambientes:4, banos:2, metros:150, amenities:['mascotas'],
     precio:'$2.800.000', expensas:'$ 436.545',
     direccion:'Av. Santa Fe 3500, Palermo',
@@ -387,7 +394,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 4;
+const SEED_V = 5;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -418,6 +425,23 @@ function migrate() {
       if (!s) continue;
       if (!p.ambientes && s.ambientes) { p.ambientes = s.ambientes; changed = true; }
       if (JSON.stringify(p.amenities) !== JSON.stringify(s.amenities)) { p.amenities = s.amenities; changed = true; }
+    }
+  }
+
+  // v5+: sync all new SEED entries and patch incomplete existing ones
+  if (v < 5) {
+    const existingIds = new Set(props.map(p => p.id));
+    for (const s of SEED) {
+      if (!existingIds.has(s.id)) {
+        props.unshift({...s}); changed = true;
+      } else {
+        const p = props.find(x => x.id === s.id);
+        if (!p) continue;
+        for (const f of ['precio','expensas','ambientes','banos','metros','amenities','direccion','barrio']) {
+          if (s[f] !== undefined && JSON.stringify(p[f]) !== JSON.stringify(s[f])) { p[f] = s[f]; changed = true; }
+        }
+        if (!p.photo && s.photo) { p.photo = s.photo; changed = true; }
+      }
     }
   }
 
