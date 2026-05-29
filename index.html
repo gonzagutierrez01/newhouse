@@ -11,9 +11,15 @@
     body { font-family: 'Inter', sans-serif; background: #EEEEE8; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
     /* HEADER */
-    header { background: #fff; border-bottom: 1px solid #E4E4DE; padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
-    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
-    #count { font-size: 12px; color: #aaa; }
+    header { background: #fff; border-bottom: 1px solid #E4E4DE; padding: 13px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; gap: 12px; }
+    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.3px; flex-shrink: 0; }
+    #count { font-size: 12px; color: #aaa; flex-shrink: 0; }
+
+    /* TAB NAV */
+    .tab-nav { display: flex; gap: 2px; background: #F0F0EA; border-radius: 10px; padding: 3px; }
+    .tab { border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 500; color: #888; padding: 5px 13px; border-radius: 7px; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap; }
+    .tab.active { background: #fff; color: #111; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .tab:hover:not(.active) { color: #555; }
 
     /* MAIN */
     main { max-width: 1080px; margin: 0 auto; padding: 22px 18px 110px; }
@@ -53,7 +59,6 @@
     .photo-wrap:hover .photo-empty svg { transform: scale(1.08); }
     .photo-wrap.drag-over { outline: 3px dashed #1A5C42; outline-offset: -4px; }
     .photo-wrap.drag-over .photo-empty { background: rgba(26,92,66,.06); color: #1A5C42; }
-
 
     /* INFO */
     .card-info { padding: 15px 15px 13px; flex: 1; display: flex; flex-direction: column; gap: 9px; }
@@ -125,18 +130,99 @@
       transition: opacity .22s, transform .22s; pointer-events: none; white-space: nowrap; z-index: 99;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOP 5 ─────────────────────────────────────────────────────────── */
+    .top5-header-bar {
+      display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px;
+    }
+    .top5-header-bar h2 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+    .top5-header-bar p { font-size: 12.5px; color: #999; line-height: 1.4; }
+
+    .top5-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .t5card {
+      background: #fff; border-radius: 16px; overflow: hidden;
+      display: flex; align-items: stretch;
+      border: 1px solid rgba(0,0,0,.04);
+      box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.07);
+      transition: transform .17s, box-shadow .17s; cursor: pointer;
+    }
+    .t5card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.08), 0 14px 36px rgba(0,0,0,.12); }
+
+    /* rank badge */
+    .t5rank {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 18px; min-width: 58px; flex-shrink: 0;
+      border-right: 1px solid #F0F0EA;
+    }
+    .t5rank-num { font-size: 24px; font-weight: 700; line-height: 1; color: #ccc; }
+    .t5card:nth-child(1) .t5rank-num { color: #C9A227; font-size: 28px; }
+    .t5card:nth-child(2) .t5rank-num { color: #9EA4A8; font-size: 26px; }
+    .t5card:nth-child(3) .t5rank-num { color: #B87333; }
+
+    /* photo */
+    .t5photo { width: 130px; height: 110px; flex-shrink: 0; overflow: hidden; background: #E4E4DE; display: flex; align-items: center; justify-content: center; }
+    .t5photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .t5photo-empty { color: #ccc; }
+
+    /* body */
+    .t5body { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .t5top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .t5addr { font-size: 14px; font-weight: 600; color: #111; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t5price { font-size: 13px; font-weight: 700; color: #1A5C42; flex-shrink: 0; }
+
+    .t5stars { font-size: 14px; letter-spacing: .5px; line-height: 1; }
+    .star-full  { color: #F59E0B; }
+    .star-empty { color: #E5E7EB; }
+
+    .t5criteria { display: flex; flex-wrap: wrap; gap: 4px; }
+    .crit {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 100px; white-space: nowrap;
+    }
+    .crit.met   { background: #ECFDF5; color: #1A5C42; }
+    .crit.unmet { background: #F3F4F6; color: #C0C4CC; }
+
+    .t5expensas { font-size: 11.5px; color: #aaa; }
+
+    @media(max-width:600px){
+      .t5photo { width: 90px; height: 90px; }
+      .t5rank { min-width: 44px; padding: 0 12px; }
+      .t5rank-num { font-size: 20px; }
+      .t5card:nth-child(1) .t5rank-num { font-size: 22px; }
+    }
+    @media(max-width:420px){
+      .t5photo { display: none; }
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>NewHouse</h1>
+  <nav class="tab-nav">
+    <button class="tab active" id="tab-home" onclick="showTab('home')">Mis deptos</button>
+    <button class="tab" id="tab-top5" onclick="showTab('top5')">Mejores 5 ✦</button>
+  </nav>
   <span id="count"></span>
 </header>
 
-<main><div class="grid" id="grid"></div></main>
+<main>
+  <!-- HOME VIEW -->
+  <div id="view-home"><div class="grid" id="grid"></div></div>
 
-<div class="add-bar">
+  <!-- TOP 5 VIEW -->
+  <div id="view-top5" style="display:none">
+    <div class="top5-header-bar">
+      <h2>Top 5 deptos</h2>
+      <p>Rankeados por proximidad a tus criterios ideales</p>
+    </div>
+    <div class="top5-list" id="top5-list"></div>
+  </div>
+</main>
+
+<div class="add-bar" id="add-bar">
   <div class="add-bar-inner">
     <input class="link-input" id="link-input" type="url"
            placeholder="Link Mercado Libre o similar"
@@ -165,6 +251,32 @@ const I = {
 };
 
 const AMENITY_ICONS = { mascotas: I.paw, gym: I.gym, cochera: I.car, pool: I.pool };
+
+// ── SCORING CRITERIA ─────────────────────────────────────────────────────
+// El depto ideal: 3+ amb, luminoso, mascotas, gym, 2+ baños, 85+ m², pileta, cochera.
+// "Luminoso" no está en los datos → se evalúa si se detecta en la dirección/notas.
+const CRITERIA = [
+  { id: 'ambientes', label: '3+ amb',    icon: '🛏', check: p => (p.ambientes || 0) >= 3 },
+  { id: 'mascotas',  label: 'Mascotas',  icon: '🐾', check: p => (p.amenities||[]).includes('mascotas') },
+  { id: 'gym',       label: 'Gym',       icon: '🏋', check: p => (p.amenities||[]).includes('gym') },
+  { id: 'banos',     label: '2 baños',   icon: '🚿', check: p => (p.banos || 0) >= 2 },
+  { id: 'metros',    label: '85+ m²',    icon: '📐', check: p => (p.metros || 0) >= 85 },
+  { id: 'pool',      label: 'Pileta',    icon: '🏊', check: p => (p.amenities||[]).includes('pool') },
+  { id: 'cochera',   label: 'Cochera',   icon: '🚗', check: p => (p.amenities||[]).includes('cochera') },
+];
+const MAX_SCORE = CRITERIA.length; // 7
+
+function scoreProperty(p) {
+  return CRITERIA.reduce((n, c) => n + (c.check(p) ? 1 : 0), 0);
+}
+
+function starsHtml(score) {
+  // 7→5★  6→4.5★ (5★)  5→4★  4→3★  3→2★  ≤2→1★
+  const full = score >= 7 ? 5 : score >= 5 ? 4 : score >= 4 ? 3 : score >= 3 ? 2 : 1;
+  const html = '<span class="star-full">' + '★'.repeat(full) + '</span>' +
+               '<span class="star-empty">' + '☆'.repeat(5 - full) + '</span>';
+  return html;
+}
 
 // ── STORAGE ──────────────────────────────────────────────────────────────
 function load() { try { return JSON.parse(localStorage.getItem('nh5')||'[]'); } catch { return []; } }
@@ -204,8 +316,6 @@ function cardHTML(p) {
     ...(p.amenities||[]).map(a => AMENITY_ICONS[a] ? `<span class="chip">${AMENITY_ICONS[a]}</span>` : ''),
   ].filter(Boolean).join('');
 
-  const source = p.url?.includes('mercadolibre') ? '<span class="source-badge">Mercado Libre</span>' : '';
-
   return `<div class="card" data-id="${esc(p.id)}" onclick="openListing('${esc(p.url)}',event)">
   <div class="photo-wrap" id="pw-${esc(p.id)}"
        ondragover="dragOver(event,'${esc(p.id)}')"
@@ -236,13 +346,82 @@ function cardHTML(p) {
 
 function esc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-// ── RENDER ───────────────────────────────────────────────────────────────
+// ── RENDER HOME ───────────────────────────────────────────────────────────
 function render() {
   const props = load();
   document.getElementById('grid').innerHTML = props.length
     ? props.map(cardHTML).join('')
     : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en tu browser.</div>`;
   document.getElementById('count').textContent = props.length ? props.length + (props.length===1?' depto':' deptos') : '';
+}
+
+// ── RENDER TOP 5 ──────────────────────────────────────────────────────────
+function renderTop5() {
+  const props = load();
+
+  const ranked = props
+    .map(p => {
+      const score = scoreProperty(p);
+      const criteria = CRITERIA.map(c => ({ ...c, met: c.check(p) }));
+      return { ...p, score, criteria };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // tiebreaker 1: closer to 85m²
+      const distA = Math.abs((a.metros || 0) - 85);
+      const distB = Math.abs((b.metros || 0) - 85);
+      if (distA !== distB) return distA - distB;
+      // tiebreaker 2: more m²
+      return (b.metros || 0) - (a.metros || 0);
+    })
+    .slice(0, 5);
+
+  const container = document.getElementById('top5-list');
+  if (!ranked.length) {
+    container.innerHTML = '<div class="empty" style="grid-column:auto">Agregá deptos para ver el ranking.</div>';
+    return;
+  }
+
+  container.innerHTML = ranked.map((p, i) => {
+    const photoHTML = p.photo
+      ? `<img src="${esc(p.photo)}" alt="" loading="lazy">`
+      : `<div class="t5photo-empty">${I.photo}</div>`;
+
+    const criteriaHTML = p.criteria.map(c =>
+      `<span class="crit ${c.met ? 'met' : 'unmet'}">${c.met ? '✓' : '✗'} ${c.label}</span>`
+    ).join('');
+
+    const matchLabel = `${p.score}/${MAX_SCORE} criterios`;
+
+    return `<div class="t5card" onclick="window.open('${esc(p.url)}','_blank','noopener,noreferrer')">
+  <div class="t5rank"><span class="t5rank-num">#${i+1}</span></div>
+  <div class="t5photo">${photoHTML}</div>
+  <div class="t5body">
+    <div class="t5top">
+      <div>
+        <div class="t5addr">${esc(p.direccion || p.barrio || 'Sin dirección')}</div>
+        <div class="t5stars" title="${matchLabel}">${starsHtml(p.score)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="t5price">${esc(p.precio || '—')}</div>
+        ${p.expensas ? `<div class="t5expensas">${esc(p.expensas)}</div>` : ''}
+      </div>
+    </div>
+    <div class="t5criteria">${criteriaHTML}</div>
+  </div>
+</div>`;
+  }).join('');
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────
+function showTab(tab) {
+  const isHome = tab === 'home';
+  document.getElementById('view-home').style.display = isHome ? '' : 'none';
+  document.getElementById('view-top5').style.display = isHome ? 'none' : '';
+  document.getElementById('add-bar').style.display   = isHome ? '' : 'none';
+  document.getElementById('tab-home').classList.toggle('active', isHome);
+  document.getElementById('tab-top5').classList.toggle('active', !isHome);
+  if (!isHome) renderTop5();
 }
 
 // ── UPDATE FIELD ─────────────────────────────────────────────────────────
@@ -267,7 +446,6 @@ function setPhoto(id, src) {
   if (!p) return;
   p.photo = src;
   save(props);
-  // update DOM
   const pw = document.getElementById('pw-' + id);
   if (!pw) return;
   let img = pw.querySelector('img');
@@ -276,7 +454,6 @@ function setPhoto(id, src) {
   img.style.display = '';
   img.onerror = () => { img.style.display='none'; pw.querySelector('.photo-empty').style.display='flex'; };
   pw.querySelector('.photo-empty').style.display = 'none';
-  closeOverlay(id);
   toast('Foto guardada ✓');
 }
 function dragOver(e, id) { e.preventDefault(); document.getElementById('pw-'+id)?.classList.add('drag-over'); }
@@ -305,34 +482,62 @@ function processFile(id, file) {
 }
 
 // ── ADD PROPERTY ─────────────────────────────────────────────────────────
+const ADD_ICON  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+const SPIN_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><path d="M12 2a10 10 0 0 1 10 10"/></svg>`;
+
+function isMLUrl(url) { return /mercadolibre\.|meli\.com/i.test(url); }
+function isFBUrl(url) { return /facebook\.com\/marketplace/i.test(url); }
+
 async function addProp() {
   const input = document.getElementById('link-input');
   const btn   = document.getElementById('add-btn');
   const url   = input.value.trim();
   if (!url) return;
 
-  const id = parseMLId(url) || ('custom-' + Date.now());
   const props = load();
+
+  // Supported platforms → call scraper API
+  if (isMLUrl(url) || isFBUrl(url)) {
+    btn.disabled = true;
+    btn.innerHTML = SPIN_ICON + ' Analizando…';
+    try {
+      const res  = await fetch('/api/scrape?url=' + encodeURIComponent(url));
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (props.find(p => p.id === data.id)) { toast('Ya está guardado'); input.value = ''; return; }
+
+      props.unshift({
+        id       : data.id,        url,
+        photo    : data.photo    || null,
+        precio   : data.precio   || '',
+        expensas : data.expensas || '',
+        direccion: data.direccion|| '',
+        barrio   : data.barrio   || '',
+        ambientes: data.ambientes|| null,
+        banos    : data.banos    || null,
+        metros   : data.metros   || null,
+        amenities: data.amenities|| [],
+      });
+      save(props); render(); input.value = '';
+      toast('Depto guardado ✓');
+    } catch (e) {
+      toast('Error al leer el listing: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = ADD_ICON + ' Guardar';
+    }
+    return;
+  }
+
+  // Fallback for unknown URLs
+  const id = parseMLId(url) || ('custom-' + Date.now());
   if (props.find(p => p.id === id)) { toast('Ya está guardado'); input.value=''; return; }
-
-  const { barrio, dormitorios, metros } = slugToInfo(url);
-  const prop = {
-    id, url,
-    photo: null,
-    precio: '', expensas: '',
-    direccion: barrio || '',
-    barrio: barrio || '',
-    dormitorios: dormitorios || null,
-    banos: null,
-    metros: metros || null,
-    amenities: [],
-  };
-
-  props.unshift(prop); // add to front
-  save(props);
-  render();
-  input.value = '';
-  toast('Depto guardado — agregá la foto desde ML ↑');
+  const { barrio, metros } = slugToInfo(url);
+  props.unshift({ id, url, photo: null, precio: '', expensas: '',
+                  direccion: barrio||'', barrio: barrio||'',
+                  banos: null, metros: metros||null, amenities: [] });
+  save(props); render(); input.value = '';
+  toast('Guardado — completá los datos manualmente');
 }
 
 // ── PRE-SEED ──────────────────────────────────────────────────────────────
@@ -386,6 +591,13 @@ const SEED = [
     photo:'https://http2.mlstatic.com/D_NQ_NP_2X_810514-MLA110404996039_042026-V.webp',
     url:'https://departamento.mercadolibre.com.ar/MLA-1747628065-departamento-4-ambientes-semipiso-luminoso-impecable-balcon-aterrazado-al-frente-en-palermo-_JM'
   },
+  {
+    id:'FB1448236079898822', barrio:'Puerto Madero', ambientes:3, banos:2, metros:87, amenities:['pool','gym','mascotas'],
+    precio:'US$1.650', expensas:'$ 625.000',
+    direccion:'Juana Manso 1600, Puerto Madero',
+    photo: null,
+    url:'https://www.facebook.com/marketplace/item/1448236079898822/'
+  },
 ];
 
 function seed() {
@@ -394,7 +606,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 6;
+const SEED_V = 7;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -404,7 +616,6 @@ function migrate() {
   const seedMap = Object.fromEntries(SEED.map(s => [s.id, s]));
   let changed = false;
 
-  // v2: fill expensas + fix amenities
   if (v < 2) {
     for (const p of props) {
       const s = seedMap[p.id];
@@ -413,12 +624,10 @@ function migrate() {
     }
   }
 
-  // v3: remove expired listings
   const before = props.length;
   props = props.filter(p => !EXPIRED_IDS.has(p.id));
   if (props.length !== before) changed = true;
 
-  // v4: add ambientes, sync amenities (mascotas)
   if (v < 4) {
     for (const p of props) {
       const s = seedMap[p.id];
@@ -428,7 +637,6 @@ function migrate() {
     }
   }
 
-  // v5+: sync all new SEED entries and patch incomplete existing ones
   if (v < 5) {
     const existingIds = new Set(props.map(p => p.id));
     for (const s of SEED) {
@@ -445,11 +653,18 @@ function migrate() {
     }
   }
 
-  // v6: force-sync photo from SEED (corrects any bad photo URL)
   if (v < 6) {
     for (const p of props) {
       const s = seedMap[p.id];
       if (s?.photo && p.photo !== s.photo) { p.photo = s.photo; changed = true; }
+    }
+  }
+
+  // v7: add any new SEED entries not yet in localStorage
+  if (v < 7) {
+    const existingIds = new Set(props.map(p => p.id));
+    for (const s of SEED) {
+      if (!existingIds.has(s.id)) { props.unshift({...s}); changed = true; }
     }
   }
 
