@@ -606,7 +606,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 7;
+const SEED_V = 8;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -666,6 +666,14 @@ function migrate() {
     for (const s of SEED) {
       if (!existingIds.has(s.id)) { props.unshift({...s}); changed = true; }
     }
+  }
+
+  // v8: dedup por id (mantiene la primera ocurrencia = la más reciente)
+  if (v < 8) {
+    const seen = new Set();
+    const before8 = props.length;
+    props = props.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
+    if (props.length !== before8) changed = true;
   }
 
   if (changed) save(props);
