@@ -606,7 +606,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 8;
+const SEED_V = 9;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -674,6 +674,13 @@ function migrate() {
     const before8 = props.length;
     props = props.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
     if (props.length !== before8) changed = true;
+  }
+
+  // v9: eliminar entries vacíos (sin url ni datos útiles)
+  if (v < 9) {
+    const before9 = props.length;
+    props = props.filter(p => p.url && (p.precio || p.direccion || p.ambientes || p.photo));
+    if (props.length !== before9) changed = true;
   }
 
   if (changed) save(props);
