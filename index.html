@@ -465,44 +465,49 @@ function showTab(tab) {
 }
 
 // ── REFRESH ALL ──────────────────────────────────────────────────────────
+const REFRESH_SVG       = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+const REFRESH_SVG_SPIN  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+
 async function refreshAll() {
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
 
   const props = load();
   const total = props.length;
-  let checked = 0, removed = 0;
+  let checked = 0;
 
-  const setLabel = () => {
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> ${checked}/${total}`;
-  };
-  setLabel();
+  btn.innerHTML = REFRESH_SVG_SPIN + ` 0/${total}`;
 
   const inactive = [];
   await Promise.all(props.map(async p => {
     try {
       const res  = await fetch('/api/check?url=' + encodeURIComponent(p.url));
       const data = await res.json();
-      if (!data.active) inactive.push(p.id);
+      if (!data.active) inactive.push(p);
     } catch {}
     checked++;
-    setLabel();
+    btn.innerHTML = REFRESH_SVG_SPIN + ` ${checked}/${total}`;
   }));
 
-  if (inactive.length) {
-    const updated = load().filter(p => !inactive.includes(p.id));
-    save(updated);
-    render();
-    removed = inactive.length;
+  btn.disabled = false;
+  btn.innerHTML = REFRESH_SVG + ' Actualizar';
+
+  if (!inactive.length) {
+    toast(`Todo activo ✓ (${total} deptos)`);
+    return;
   }
 
-  btn.disabled = false;
-  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Actualizar`;
-
-  toast(removed
-    ? `${removed} depto${removed > 1 ? 's' : ''} eliminado${removed > 1 ? 's' : ''} · ${total - removed} activos`
-    : `Todo activo ✓ (${total} deptos)`
+  // Mostrar confirmación con los nombres antes de borrar
+  const names = inactive.map(p => p.direccion || p.barrio || p.id).join('\n• ');
+  const ok = confirm(
+    `Se encontraron ${inactive.length} depto${inactive.length > 1 ? 's' : ''} inactivo${inactive.length > 1 ? 's' : ''}:\n\n• ${names}\n\n¿Eliminarlos?`
   );
+  if (!ok) { toast('No se eliminó nada'); return; }
+
+  const inactiveIds = new Set(inactive.map(p => p.id));
+  save(load().filter(p => !inactiveIds.has(p.id)));
+  render();
+  toast(`${inactive.length} depto${inactive.length > 1 ? 's' : ''} eliminado${inactive.length > 1 ? 's' : ''}`);
 }
 
 // ── DELETE PROP ──────────────────────────────────────────────────────────
@@ -714,7 +719,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 9;
+const SEED_V = 10;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -789,6 +794,14 @@ function migrate() {
     const before9 = props.length;
     props = props.filter(p => p.url && (p.precio || p.direccion || p.ambientes || p.photo));
     if (props.length !== before9) changed = true;
+  }
+
+  // v10: restaurar SEED completo (recuperar deptos borrados por el checker erróneo)
+  if (v < 10) {
+    const existingIds = new Set(props.map(p => p.id));
+    for (const s of SEED) {
+      if (!existingIds.has(s.id)) { props.push({...s}); changed = true; }
+    }
   }
 
   if (changed) save(props);
