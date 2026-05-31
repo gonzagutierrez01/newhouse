@@ -80,8 +80,7 @@ async function scrapeML(url) {
   });
   const html = res.ok ? await res.text() : '';
 
-  const rawPhoto = extractOgImage(html);
-  const photo    = rawPhoto ? rawPhoto.replace(/-[A-Z](?:-null)?\.jpg$/, '-V.webp') : null;
+  const photo = extractOgImage(html);
 
   const titleM = html.match(/property="og:title"[^>]*content="([^"]+)"/i) ||
                  html.match(/content="([^"]+)"[^>]*property="og:title"/i);

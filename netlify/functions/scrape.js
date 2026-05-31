@@ -96,9 +96,7 @@ async function scrapeML(url) {
   const html = res.ok ? await res.text() : '';
 
   // Foto desde og:image (presente en la challenge page; formato cambió de D_NQ_NP_... a D_XXXXX-MLA...)
-  const rawPhoto = extractOgImage(html);
-  // Convertir a variante -V.webp (sin watermark de precio)
-  const photo = rawPhoto ? rawPhoto.replace(/-[A-Z](?:-null)?\.jpg$/, '-V.webp') : null;
+  const photo = extractOgImage(html);
 
   // Título og:title → tiene ambientes y amenities (ej: "3 Ambientes Con Cochera ...")
   const titleM = html.match(/property="og:title"[^>]*content="([^"]+)"/i) ||
