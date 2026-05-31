@@ -98,16 +98,8 @@
     @media (hover: hover) { .card:hover .del-btn { opacity: 1; } .del-btn:hover { background: rgba(200,30,30,.8); } }
     @media (hover: none)  { .del-btn { opacity: 1; background: rgba(0,0,0,.35); } }
 
-    /* CHANGE PHOTO BTN */
-    .photo-btn {
-      position: absolute; bottom: 8px; right: 8px; z-index: 5;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(0,0,0,.45); border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity .15s;
-    }
-    @media (hover: hover) { .card:hover .photo-btn { opacity: 1; } .photo-btn:hover { background: rgba(0,0,0,.7); } }
-    @media (hover: none)  { .photo-btn { opacity: 1; background: rgba(0,0,0,.35); } }
+    .photo-wrap.drag-over { outline: 3px dashed #1A5C42; outline-offset: -4px; }
+    .photo-wrap.drag-over .photo-empty { background: rgba(26,92,66,.06); color: #1A5C42; }
 
     /* ADD BAR */
     .add-bar {
@@ -355,17 +347,18 @@ function cardHTML(p) {
   ].filter(Boolean).join('');
 
   return `<div class="card" data-id="${esc(p.id)}" onclick="openListing('${esc(p.url)}',event)">
-  <div class="photo-wrap" id="pw-${esc(p.id)}" style="position:relative">
+  <div class="photo-wrap" id="pw-${esc(p.id)}" style="position:relative"
+       ondragover="dragOver(event,'${esc(p.id)}')"
+       ondragleave="dragLeave('${esc(p.id)}')"
+       ondrop="dropPhoto(event,'${esc(p.id)}')">
     ${photoContent}
-    <div class="photo-empty" ${emptyStyle}></div>
+    <div class="photo-empty" ${emptyStyle}>
+      ${I.photo}
+      <span>Drag foto aquí</span>
+    </div>
     <button class="del-btn" onclick="deleteProp('${esc(p.id)}',event)" title="Eliminar">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
     </button>
-    <button class="photo-btn" onclick="event.stopPropagation();document.getElementById('fi-${esc(p.id)}').click()" title="Cambiar foto">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    </button>
-    <input type="file" id="fi-${esc(p.id)}" accept="image/*" style="display:none"
-           onchange="event.stopPropagation();if(this.files[0])processFile('${esc(p.id)}',this.files[0])">
   </div>
 
   <div class="card-info">
@@ -522,6 +515,15 @@ function openListing(url, event) {
 }
 
 // ── PHOTO ────────────────────────────────────────────────────────────────
+function dragOver(e, id) { e.preventDefault(); document.getElementById('pw-'+id)?.classList.add('drag-over'); }
+function dragLeave(id)   { document.getElementById('pw-'+id)?.classList.remove('drag-over'); }
+function dropPhoto(e, id) {
+  e.preventDefault(); dragLeave(id);
+  const file = e.dataTransfer.files[0];
+  if (file?.type.startsWith('image/')) { processFile(id, file); return; }
+  const url = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+  if (url?.startsWith('http')) setPhoto(id, url);
+}
 async function setPhoto(id, src) {
   await db.from('properties').update({ photo: src }).eq('id', id);
   const pw = document.getElementById('pw-' + id);
