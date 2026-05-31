@@ -89,10 +89,7 @@
 
     .address {
       font-size: 14.5px; font-weight: 600; color: #111; line-height: 1.35; letter-spacing: -.2px;
-      border: none; background: none; font-family: inherit; outline: none; width: 100%; padding: 0;
-      resize: none; cursor: text;
     }
-    .address::placeholder { color: #ccc; font-weight: 500; }
 
     /* Chips */
     .chips { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -376,9 +373,7 @@ function cardHTML(p) {
       <div class="expensas">${p.expensas ? 'Expensas: ' + esc(p.expensas) : ''}</div>
     </div>
     <div class="divider"></div>
-    <textarea class="address" rows="2" placeholder="Dirección"
-              onchange="updateField('${esc(p.id)}','direccion',this.value)"
-    >${esc(p.direccion||'')}</textarea>
+    <div class="address">${esc(p.direccion||'')}</div>
     ${chips ? `<div class="chips">${chips}</div>` : ''}
   </div>
 </div>`;
@@ -516,13 +511,6 @@ function deleteProp(id, event) {
   const props = load().filter(p => p.id !== id);
   save(props); render();
   toast('Depto eliminado');
-}
-
-// ── UPDATE FIELD ─────────────────────────────────────────────────────────
-function updateField(id, key, val) {
-  const props = load();
-  const p = props.find(x => x.id === id);
-  if (p) { p[key] = val; save(props); }
 }
 
 // ── OPEN LISTING ─────────────────────────────────────────────────────────

@@ -89,45 +89,33 @@ async function scrapeML(url) {
   const id = m ? 'MLA' + m[1] : null;
   if (!id) return null;
 
-  // articulo.mercadolibre.com.ar no tiene geo-blocking desde servidores en EEUU
-  const fetchUrl = `https://articulo.mercadolibre.com.ar/MLA-${m[1]}`;
-  const res = await fetch(fetchUrl, {
-    headers: { 'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
+  // ML devuelve una challenge page estática que SÍ contiene og:image y og:title
+  const res = await fetch(`https://articulo.mercadolibre.com.ar/MLA-${m[1]}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' },
   });
   const html = res.ok ? await res.text() : '';
 
-  // Foto: primer D_NQ_NP del listing (la imagen principal siempre aparece primera)
-  const photoRaw = html.match(/https:\/\/http2\.mlstatic\.com\/D_NQ_NP_[\w-]+\.webp/)?.[0] || null;
-  const photo = photoRaw ? photoRaw.replace('-F-null', '-V') : null;
+  // Foto desde og:image (presente en la challenge page; formato cambió de D_NQ_NP_... a D_XXXXX-MLA...)
+  const rawPhoto = extractOgImage(html);
+  // Convertir a variante -V.webp (sin watermark de precio)
+  const photo = rawPhoto ? rawPhoto.replace(/-[A-Z](?:-null)?\.jpg$/, '-V.webp') : null;
 
-  // Precio desde JSON embebido: "price":1600,"currency_id":"USD"
-  let precio = null;
-  const priceM = html.match(/"price":(\d+),"currency_id":"([A-Z]+)"/);
-  if (priceM) {
-    const p   = parseInt(priceM[1]);
-    const cur = priceM[2];
-    if (p > 100) precio = `${cur === 'USD' ? 'US$' : '$'}${p.toLocaleString('es-AR')}`;
-  }
+  // Título og:title → tiene ambientes y amenities (ej: "3 Ambientes Con Cochera ...")
+  const titleM = html.match(/property="og:title"[^>]*content="([^"]+)"/i) ||
+                 html.match(/content="([^"]+)"[^>]*property="og:title"/i);
+  const title = titleM ? decodeHTMLEntities(titleM[1]) : '';
 
-  // Baños y metros desde el HTML renderizado
-  const banoM = html.match(/(\d+)\s*[Bb]a[ñn]/);
-  const banos = banoM ? parseInt(banoM[1]) : null;
-
-  const metM  = html.match(/(\d{2,3})\s*m[²2]/);
-  const metros = metM ? parseInt(metM[1]) : null;
-
-  // Barrio, ambientes y amenities desde el slug de la URL
+  // Slug de la URL → tiene barrio, ambientes, metros
   const slug = decodeURIComponent(url)
     .split('/').pop()
     .toLowerCase()
     .replace(/_jm.*/i, '')
     .replace(/-/g, ' ');
 
-  const data = parseText(slug, id, url);
-  data.photo  = photo;
-  if (precio)                  data.precio = precio;
-  if (banos  && !data.banos)  data.banos  = banos;
-  if (metros && !data.metros) data.metros = metros;
+  // Parsear slug + título juntos para maximizar datos extraídos
+  const data = parseText(slug + '\n' + title, id, url);
+  data.photo = photo;
+  // Precio no está disponible en HTML estático (requiere JS rendering o API con auth)
   return data;
 }
 

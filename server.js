@@ -123,17 +123,20 @@ async function scrapeML(url) {
   const id = parseMLId(url);
   if (!id) return null;
 
-  // Foto: el HTML público sí tiene og:image
+  // Foto desde og:image (disponible en la challenge page estática)
   const htmlRes = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36', 'Accept-Language': 'es-AR,es;q=0.9' }
   });
   const html  = htmlRes.ok ? await htmlRes.text() : '';
-  const photoM = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i) ||
-                 html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
-  const photo = photoM?.[1] || null;
+  const photoM = html.match(/property="og:image"[^>]*content="([^"]+)"/i) ||
+                 html.match(/content="([^"]+)"[^>]*property="og:image"/i);
+  const rawPhoto = photoM?.[1]?.replace(/&amp;/g, '&') || null;
+  // Convertir -O.jpg a -V.webp (sin marca de agua)
+  const photo = rawPhoto ? rawPhoto.replace(/-[A-Z](?:-null)?\.jpg$/, '-V.webp') : null;
 
-  // Texto completo: Chrome renderiza la SPA con precio, baños, amenities
-  const text = readWithChrome(url);
+  // Chrome abre el tab y espera a que la challenge page de ML resuelva el PoW y redirija
+  // 12s da tiempo suficiente para que cargue el listing real con precio y detalles
+  const text = readWithChrome(url, 12);
   const data  = parseText(text, id, url);
   data.photo  = photo;
   return data;
