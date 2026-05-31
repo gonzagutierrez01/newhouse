@@ -72,19 +72,6 @@
     .expensas { font-size: 12.5px; color: #888; }
     .expensas:empty { display: none; }
 
-    /* VER PUBLICACIÓN overlay (mobile) */
-    .view-overlay {
-      position: absolute; inset: 0; z-index: 4;
-      background: rgba(0,0,0,.38);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity .17s;
-    }
-    .card.show-overlay .view-overlay { opacity: 1; pointer-events: auto; }
-    .view-overlay-btn {
-      background: #fff; color: #1A5C42; border: none; border-radius: 100px;
-      padding: 10px 20px; font-size: 13px; font-weight: 700;
-      font-family: inherit; cursor: pointer; white-space: nowrap;
-    }
 
     .divider { height: 1px; background: #EBEBEB; }
 
@@ -371,9 +358,6 @@ function cardHTML(p) {
     <button class="del-btn" onclick="deleteProp('${esc(p.id)}',event)" title="Eliminar">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
     </button>
-    <div class="view-overlay" onclick="event.stopPropagation();window.open('${esc(p.url)}','_blank','noopener,noreferrer')">
-      <button class="view-overlay-btn">Ver publicación ↗</button>
-    </div>
   </div>
 
   <div class="card-info">
@@ -526,30 +510,8 @@ function openListing(url, event) {
   if (!url) return;
   const tag = event.target.tagName.toLowerCase();
   if (['input','textarea','button','select'].includes(tag)) return;
-
-  // Mobile: 1er toque muestra overlay, 2do toque en cualquier parte de la card abre el link
-  if (window.matchMedia('(hover: none)').matches) {
-    const card = event.currentTarget;
-    if (card.classList.contains('show-overlay')) {
-      card.classList.remove('show-overlay');
-      window.open(url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    event.preventDefault();
-    document.querySelectorAll('.card.show-overlay').forEach(c => c.classList.remove('show-overlay'));
-    card.classList.add('show-overlay');
-    return;
-  }
-
   window.open(url, '_blank', 'noopener,noreferrer');
 }
-
-// Cerrar overlay al tocar fuera de la card
-document.addEventListener('click', e => {
-  if (!e.target.closest('.card')) {
-    document.querySelectorAll('.card.show-overlay').forEach(c => c.classList.remove('show-overlay'));
-  }
-});
 
 // ── PHOTO ────────────────────────────────────────────────────────────────
 async function setPhoto(id, src) {
