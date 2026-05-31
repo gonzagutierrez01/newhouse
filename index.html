@@ -657,41 +657,14 @@ async function addProp() {
 }
 
 // ── PRE-SEED ──────────────────────────────────────────────────────────────
+// SEED en orden cronológico: índice 0 = más reciente, último = más antiguo
 const SEED = [
   {
-    id:'MLA3377586038', barrio:'Belgrano', ambientes:3, banos:2, metros:77, amenities:['cochera','pool','mascotas'],
-    precio:'$1.850.000', expensas:'$ 584.920',
-    direccion:'Amenabar 2700, Belgrano',
-    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_931955-MLA111295526654_052026-V.webp',
-    url:'https://departamento.mercadolibre.com.ar/MLA-3377586038-deprartamento-3-ambientes-cochera-parrilla-luminoso-belgrano-_JM'
-  },
-  {
-    id:'MLA3337043752', barrio:'Villa Crespo', ambientes:3, banos:2, metros:68, amenities:['cochera','gym','pool'],
-    precio:'US$1.600', expensas:'',
-    direccion:'Av. Córdoba 4300, Villa Crespo',
-    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_884616-MLA110887678924_052026-V.webp',
-    url:'https://departamento.mercadolibre.com.ar/MLA-3337043752-dome-green-soho-3-amb-en-piso-alto-amenities-con-cochera-_JM'
-  },
-  {
-    id:'MLA3337508776', barrio:'Palermo Soho', ambientes:3, banos:2, metros:90, amenities:['cochera','gym','pool','mascotas'],
-    precio:'US$1.690', expensas:'$ 455.000',
-    direccion:'Scalabrini Ortiz 1600, Palermo Soho',
-    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_837684-MLA110894095822_052026-V.webp',
-    url:'https://departamento.mercadolibre.com.ar/MLA-3337508776-alquiler-departamento-tres-ambientes-palermo-soho-a-estrenar-con-amenities-_JM'
-  },
-  {
-    id:'MLA3336957980', barrio:'Recoleta', ambientes:3, banos:1, metros:88, amenities:[],
-    precio:'US$1.400', expensas:'$ 410.000',
-    direccion:'Schiaffino 2100, Recoleta',
-    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_724131-MLA111853515237_052026-V.webp',
-    url:'https://departamento.mercadolibre.com.ar/MLA-3336957980-alquiler-departamento-recoleta-3-ambientes-piso-alto-super-luminoso-_JM'
-  },
-  {
-    id:'MLA3112562764', barrio:'Palermo', ambientes:3, banos:2, metros:80, amenities:['gym','pool','mascotas'],
-    precio:'US$1.600', expensas:'$ 450.000',
-    direccion:'Quesada 1900, Palermo Hollywood',
-    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_637824-MLA109638537133_032026-V.webp',
-    url:'https://departamento.mercadolibre.com.ar/MLA-3112562764-alquiler-departamento-3-amb-en-palermo-_JM'
+    id:'FB1448236079898822', barrio:'Puerto Madero', ambientes:3, banos:2, metros:87, amenities:['pool','gym','mascotas'],
+    precio:'US$1.650', expensas:'$ 625.000',
+    direccion:'Juana Manso 1600, Puerto Madero',
+    photo: null,
+    url:'https://www.facebook.com/marketplace/item/1448236079898822/'
   },
   {
     id:'MLA1806510481', barrio:'Colegiales', ambientes:3, banos:3, metros:83, amenities:['cochera','gym','pool'],
@@ -708,11 +681,39 @@ const SEED = [
     url:'https://departamento.mercadolibre.com.ar/MLA-1747628065-departamento-4-ambientes-semipiso-luminoso-impecable-balcon-aterrazado-al-frente-en-palermo-_JM'
   },
   {
-    id:'FB1448236079898822', barrio:'Puerto Madero', ambientes:3, banos:2, metros:87, amenities:['pool','gym','mascotas'],
-    precio:'US$1.650', expensas:'$ 625.000',
-    direccion:'Juana Manso 1600, Puerto Madero',
-    photo: null,
-    url:'https://www.facebook.com/marketplace/item/1448236079898822/'
+    id:'MLA3112562764', barrio:'Palermo', ambientes:3, banos:2, metros:80, amenities:['gym','pool','mascotas'],
+    precio:'US$1.600', expensas:'$ 450.000',
+    direccion:'Quesada 1900, Palermo Hollywood',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_637824-MLA109638537133_032026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3112562764-alquiler-departamento-3-amb-en-palermo-_JM'
+  },
+  {
+    id:'MLA3336957980', barrio:'Recoleta', ambientes:3, banos:1, metros:88, amenities:[],
+    precio:'US$1.400', expensas:'$ 410.000',
+    direccion:'Schiaffino 2100, Recoleta',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_724131-MLA111853515237_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3336957980-alquiler-departamento-recoleta-3-ambientes-piso-alto-super-luminoso-_JM'
+  },
+  {
+    id:'MLA3337508776', barrio:'Palermo Soho', ambientes:3, banos:2, metros:90, amenities:['cochera','gym','pool','mascotas'],
+    precio:'US$1.690', expensas:'$ 455.000',
+    direccion:'Scalabrini Ortiz 1600, Palermo Soho',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_837684-MLA110894095822_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3337508776-alquiler-departamento-tres-ambientes-palermo-soho-a-estrenar-con-amenities-_JM'
+  },
+  {
+    id:'MLA3337043752', barrio:'Villa Crespo', ambientes:3, banos:2, metros:68, amenities:['cochera','gym','pool'],
+    precio:'US$1.600', expensas:'',
+    direccion:'Av. Córdoba 4300, Villa Crespo',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_884616-MLA110887678924_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3337043752-dome-green-soho-3-amb-en-piso-alto-amenities-con-cochera-_JM'
+  },
+  {
+    id:'MLA3377586038', barrio:'Belgrano', ambientes:3, banos:2, metros:77, amenities:['cochera','pool','mascotas'],
+    precio:'$1.850.000', expensas:'$ 584.920',
+    direccion:'Amenabar 2700, Belgrano',
+    photo:'https://http2.mlstatic.com/D_NQ_NP_2X_931955-MLA111295526654_052026-V.webp',
+    url:'https://departamento.mercadolibre.com.ar/MLA-3377586038-deprartamento-3-ambientes-cochera-parrilla-luminoso-belgrano-_JM'
   },
 ];
 
@@ -722,7 +723,7 @@ function seed() {
 }
 
 // ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 10;
+const SEED_V = 11;
 const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
 
 function migrate() {
@@ -805,6 +806,17 @@ function migrate() {
     for (const s of SEED) {
       if (!existingIds.has(s.id)) { props.push({...s}); changed = true; }
     }
+  }
+
+  // v11: reordenar según el nuevo SEED (más reciente primero)
+  if (v < 11) {
+    const seedIds  = SEED.map(s => s.id);            // orden correcto: newest → oldest
+    const propMap  = Object.fromEntries(props.map(p => [p.id, p]));
+    const seedSet  = new Set(seedIds);
+    const nonSeed  = props.filter(p => !seedSet.has(p.id)); // user-added: van primero
+    const seedPart = seedIds.filter(id => propMap[id]).map(id => propMap[id]);
+    props   = [...nonSeed, ...seedPart];
+    changed = true;
   }
 
   if (changed) save(props);
