@@ -89,8 +89,9 @@ async function scrapeML(url) {
   const id = m ? 'MLA' + m[1] : null;
   if (!id) return null;
 
-  // Googlebot UA: ML sirve el HTML completo con precio, imágenes y specs embebidos en JS
-  const res = await fetch(url, {
+  // articulo.mercadolibre.com.ar no tiene geo-blocking desde servidores en EEUU
+  const fetchUrl = `https://articulo.mercadolibre.com.ar/MLA-${m[1]}`;
+  const res = await fetch(fetchUrl, {
     headers: { 'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
   });
   const html = res.ok ? await res.text() : '';

@@ -12,7 +12,11 @@ const ML_INACTIVE = [
 ];
 
 async function checkML(url) {
-  const res = await fetch(url, {
+  const idM = url.match(/MLA-?(\d+)/i);
+  const fetchUrl = idM
+    ? `https://articulo.mercadolibre.com.ar/MLA-${idM[1]}`
+    : url;
+  const res = await fetch(fetchUrl, {
     headers: { 'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
     redirect: 'follow',
   });
