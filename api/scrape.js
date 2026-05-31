@@ -80,22 +80,39 @@ async function scrapeML(url) {
   const id = m ? 'MLA' + m[1] : null;
   if (!id) return null;
 
+  // Googlebot UA → ML devuelve el HTML completo con precio, foto, baños, m²
   const res = await fetch(`https://articulo.mercadolibre.com.ar/MLA-${m[1]}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36' },
+    headers: { 'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
   });
   const html = res.ok ? await res.text() : '';
 
-  const photo = extractOgImage(html);
+  // Foto: primer D_NQ_NP del listing, convertir -F-null a -V
+  const photoRaw = html.match(/https:\/\/http2\.mlstatic\.com\/D_NQ_NP_[\w-]+\.webp/)?.[0] || null;
+  const photo = photoRaw ? photoRaw.replace('-F-null', '-V') : null;
 
-  const titleM = html.match(/property="og:title"[^>]*content="([^"]+)"/i) ||
-                 html.match(/content="([^"]+)"[^>]*property="og:title"/i);
-  const title  = titleM ? decodeHTMLEntities(titleM[1]) : '';
+  // Precio desde JSON embebido
+  let precio = null;
+  const priceM = html.match(/"price":(\d+),"currency_id":"([A-Z]+)"/);
+  if (priceM) {
+    const p = parseInt(priceM[1]), cur = priceM[2];
+    if (p > 100) precio = `${cur === 'USD' ? 'US$' : '$'}${p.toLocaleString('es-AR')}`;
+  }
 
+  // Baños y metros desde el HTML completo
+  const banoM = html.match(/(\d+)\s*ba[ñn]/i);
+  const banos = banoM ? parseInt(banoM[1]) : null;
+  const metM  = html.match(/(\d{2,3})\s*m[²2]/);
+  const metros = metM ? parseInt(metM[1]) : null;
+
+  // Barrio, ambientes y amenities desde el slug de la URL
   const slug = decodeURIComponent(url).split('/').pop()
     .toLowerCase().replace(/_jm.*/i, '').replace(/-/g, ' ');
 
-  const data = parseText(slug + '\n' + title, id, url);
-  data.photo = photo;
+  const data = parseText(slug, id, url);
+  data.photo  = photo;
+  if (precio)               data.precio = precio;
+  if (banos  && !data.banos)  data.banos  = banos;
+  if (metros && !data.metros) data.metros = metros;
   return data;
 }
 
