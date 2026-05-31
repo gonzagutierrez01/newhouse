@@ -41,7 +41,12 @@ function parseText(text, id, url) {
 
   const barrio    = findBarrio(text);
   const addrM     = text.match(/(?:[Uu]bicaci[oó]n|[Dd]irecci[oó]n)[:\s]+([A-ZÁÉÍÓÚa-záéíóúñÑ][^\n,]{4,40})/i);
-  const direccion = (addrM ? addrM[1].trim() : barrio) || 'Buenos Aires';
+  const addrClean = addrM && !/(información|zona|característica|buscar)/i.test(addrM[1]) ? addrM[1].trim() : null;
+  const streetM   = text.match(/\b((?:Av(?:enida)?\.?\s+)?[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚa-záéíóúñÑ][a-záéíóúñ]+){0,2})\s+(\d{3,5})\b(?!\s*m)/);
+  const streetAddr = streetM && !/baño|piso|hab|amb|planta|nivel/i.test(streetM[1])
+    ? `${streetM[1].trim()} ${streetM[2]}`
+    : null;
+  const direccion = addrClean || (streetAddr ? `${streetAddr}${barrio ? ', ' + barrio : ''}` : barrio) || 'Buenos Aires';
 
   const amenities = [];
   if (/pileta|piscina|pool/.test(low))                                 amenities.push('pool');
