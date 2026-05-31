@@ -100,6 +100,17 @@
     @media (hover: hover) { .card:hover .del-btn { opacity: 1; } .del-btn:hover { background: rgba(200,30,30,.8); } }
     @media (hover: none)  { .del-btn { opacity: 1; background: rgba(0,0,0,.35); } }
 
+    /* CHANGE PHOTO BTN */
+    .photo-btn {
+      position: absolute; bottom: 8px; right: 8px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(0,0,0,.45); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s;
+    }
+    @media (hover: hover) { .card:hover .photo-btn { opacity: 1; } .photo-btn:hover { background: rgba(0,0,0,.7); } }
+    @media (hover: none)  { .photo-btn { opacity: 1; background: rgba(0,0,0,.35); } }
+
     /* ADD BAR */
     .add-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -358,6 +369,11 @@ function cardHTML(p) {
     <button class="del-btn" onclick="deleteProp('${esc(p.id)}',event)" title="Eliminar">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
     </button>
+    <button class="photo-btn" onclick="event.stopPropagation();document.getElementById('fi-${esc(p.id)}').click()" title="Cambiar foto">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
+    <input type="file" id="fi-${esc(p.id)}" accept="image/*" style="display:none"
+           onchange="event.stopPropagation();if(this.files[0])processFile('${esc(p.id)}',this.files[0])">
   </div>
 
   <div class="card-info">
