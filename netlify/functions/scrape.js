@@ -20,11 +20,13 @@ function findBarrio(text) {
 function parseText(text, id, url) {
   const low = text.toLowerCase();
 
-  const habM = text.match(/(\d+)\s*habitaci[oó]n/i);
-  const ambM = text.match(/(\d+)\s*[Aa]mbientes?/);
+  const habM     = text.match(/(\d+)\s*habitaci[oó]n/i);
+  const ambM     = text.match(/(\d+)\s*[Aa]mbientes?/);
+  const ambShortM = text.match(/(\d+)\s*[Aa]mb\b/i);   // "3 Amb" (título/slug ML)
   let ambientes = null;
-  if (habM)      ambientes = parseInt(habM[1]) + 1;
-  else if (ambM) ambientes = parseInt(ambM[1]);
+  if (habM)           ambientes = parseInt(habM[1]) + 1;
+  else if (ambM)      ambientes = parseInt(ambM[1]);
+  else if (ambShortM) ambientes = parseInt(ambShortM[1]);
 
   const banoM = text.match(/(\d+)\s*ba[ñn]o/i);
   const banos = banoM ? parseInt(banoM[1]) : null;
@@ -98,33 +100,17 @@ async function scrapeML(url) {
 
   const photo = extractOgImage(html);
 
-  // Texto para parsear: og:title + og:description + JSON-LD
+  // ML es SPA: og:description = og:title (inútil). Usamos título + slug de la URL.
   const title = extractMeta(html, 'og:title');
-  const desc  = extractMeta(html, 'og:description');
-  let ldText  = '';
+  const slug  = decodeURIComponent(url)
+    .split('/').pop()
+    .toLowerCase()
+    .replace(/_jm.*/i, '')
+    .replace(/-/g, ' ');
 
-  const ldMatches = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
-  let ldProduct = null;
-  for (const lm of ldMatches) {
-    try {
-      const parsed = JSON.parse(lm[1]);
-      const candidates = Array.isArray(parsed) ? parsed : [parsed];
-      const product = candidates.find(p => p['@type'] === 'Product');
-      if (product) { ldProduct = product; ldText = lm[1]; break; }
-    } catch {}
-  }
-
-  const data = parseText([title, desc, ldText].join('\n'), id, url);
+  const data = parseText([title, slug].join('\n'), id, url);
   data.photo = photo;
-
-  // Precio desde JSON-LD si no se detectó en texto
-  if (!data.precio && ldProduct?.offers) {
-    const offer  = Array.isArray(ldProduct.offers) ? ldProduct.offers[0] : ldProduct.offers;
-    const price  = parseInt(offer?.price);
-    const cur    = offer?.priceCurrency || 'USD';
-    if (price > 100) data.precio = `${cur === 'USD' ? 'US$' : '$'}${price.toLocaleString('es-AR')}`;
-  }
-
+  // Precio no disponible en HTML estático — el usuario lo completa en localhost
   return data;
 }
 
