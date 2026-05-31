@@ -390,7 +390,7 @@ function esc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39
 function render() {
   const props = load();
   document.getElementById('grid').innerHTML = props.length
-    ? props.map(cardHTML).join('')
+    ? [...props].reverse().map(cardHTML).join('')
     : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en tu browser.</div>`;
   document.getElementById('count').textContent = props.length ? props.length + (props.length===1?' depto':' deptos') : '';
 }
@@ -531,12 +531,15 @@ function openListing(url, event) {
   const tag = event.target.tagName.toLowerCase();
   if (['input','textarea','button','select'].includes(tag)) return;
 
-  // Mobile: primer tap muestra el overlay "Ver publicación"; segundo tap (en botón) abre el link
+  // Mobile: 1er toque muestra overlay, 2do toque en cualquier parte de la card abre el link
   if (window.matchMedia('(hover: none)').matches) {
     const card = event.currentTarget;
-    if (card.classList.contains('show-overlay')) return; // deja que el botón del overlay actúe
+    if (card.classList.contains('show-overlay')) {
+      card.classList.remove('show-overlay');
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
     event.preventDefault();
-    // Cierra cualquier overlay abierto y abre el de esta card
     document.querySelectorAll('.card.show-overlay').forEach(c => c.classList.remove('show-overlay'));
     card.classList.add('show-overlay');
     return;
