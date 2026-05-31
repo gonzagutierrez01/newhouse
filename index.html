@@ -334,14 +334,14 @@ function cardHTML(p) {
       <span>Drag foto aquí</span>
     </div>
     <button class="del-btn" onclick="deleteProp('${esc(p.id)}',event)" title="Eliminar">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
     </button>
   </div>
 
   <div class="card-info">
     <div class="price-line">
       <div class="price${p.precio ? '' : ' empty'}">${p.precio ? esc(p.precio) : 'US$ —'}</div>
-      <div class="expensas${p.expensas ? '' : ' empty'}">${p.expensas ? esc(p.expensas) : 'Expensas: $ —'}</div>
+      <div class="expensas${p.expensas ? '' : ' empty'}">Expensas: ${p.expensas ? esc(p.expensas) : '$ —'}</div>
     </div>
     <div class="divider"></div>
     <textarea class="address" rows="2" placeholder="Dirección"
