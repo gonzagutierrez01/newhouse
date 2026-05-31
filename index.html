@@ -6,6 +6,7 @@
   <title>NewHouse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #EEEEE8; min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -311,9 +312,17 @@ function starsHtml(score) {
   return html;
 }
 
-// ── STORAGE ──────────────────────────────────────────────────────────────
-function load() { try { return JSON.parse(localStorage.getItem('nh5')||'[]'); } catch { return []; } }
-function save(d) { try { localStorage.setItem('nh5', JSON.stringify(d)); } catch { toast('Almacenamiento lleno'); } }
+// ── SUPABASE ─────────────────────────────────────────────────────────────
+const { createClient } = window.supabase;
+const db = createClient(
+  'https://zskpsxcqmiswoxldwygd.supabase.co',
+  'sb_publishable_0LgyQGZQ-ITeRoexYm8OhA_OK9FjlRB'
+);
+
+async function load() {
+  const { data } = await db.from('properties').select('*').order('created_at', { ascending: false });
+  return data || [];
+}
 
 // ── URL PARSER ───────────────────────────────────────────────────────────
 function parseMLId(url) {
@@ -382,17 +391,17 @@ function cardHTML(p) {
 function esc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ── RENDER HOME ───────────────────────────────────────────────────────────
-function render() {
-  const props = load();
+async function render() {
+  const props = await load();
   document.getElementById('grid').innerHTML = props.length
     ? props.map(cardHTML).join('')
-    : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en tu browser.</div>`;
+    : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en la nube.</div>`;
   document.getElementById('count').textContent = props.length ? props.length + (props.length===1?' depto':' deptos') : '';
 }
 
 // ── RENDER TOP 5 ──────────────────────────────────────────────────────────
-function renderTop5() {
-  const props = load();
+async function renderTop5() {
+  const props = await load();
 
   const ranked = props
     .map(p => {
@@ -467,7 +476,7 @@ async function refreshAll() {
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
 
-  const props = load();
+  const props = await load();
   const total = props.length;
   let checked = 0;
 
@@ -492,24 +501,23 @@ async function refreshAll() {
     return;
   }
 
-  // Mostrar confirmación con los nombres antes de borrar
   const names = inactive.map(p => p.direccion || p.barrio || p.id).join('\n• ');
   const ok = confirm(
     `Se encontraron ${inactive.length} depto${inactive.length > 1 ? 's' : ''} inactivo${inactive.length > 1 ? 's' : ''}:\n\n• ${names}\n\n¿Eliminarlos?`
   );
   if (!ok) { toast('No se eliminó nada'); return; }
 
-  const inactiveIds = new Set(inactive.map(p => p.id));
-  save(load().filter(p => !inactiveIds.has(p.id)));
-  render();
+  const inactiveIds = inactive.map(p => p.id);
+  await db.from('properties').delete().in('id', inactiveIds);
+  await render();
   toast(`${inactive.length} depto${inactive.length > 1 ? 's' : ''} eliminado${inactive.length > 1 ? 's' : ''}`);
 }
 
 // ── DELETE PROP ──────────────────────────────────────────────────────────
-function deleteProp(id, event) {
+async function deleteProp(id, event) {
   event.stopPropagation();
-  const props = load().filter(p => p.id !== id);
-  save(props); render();
+  await db.from('properties').delete().eq('id', id);
+  render();
   toast('Depto eliminado');
 }
 
@@ -544,12 +552,8 @@ document.addEventListener('click', e => {
 });
 
 // ── PHOTO ────────────────────────────────────────────────────────────────
-function setPhoto(id, src) {
-  const props = load();
-  const p = props.find(x => x.id === id);
-  if (!p) return;
-  p.photo = src;
-  save(props);
+async function setPhoto(id, src) {
+  await db.from('properties').update({ photo: src }).eq('id', id);
   const pw = document.getElementById('pw-' + id);
   if (!pw) return;
   let img = pw.querySelector('img');
@@ -598,8 +602,6 @@ async function addProp() {
   const url   = input.value.trim();
   if (!url) return;
 
-  const props = load();
-
   // Supported platforms → call scraper API
   if (isMLUrl(url) || isFBUrl(url)) {
     btn.disabled = true;
@@ -608,21 +610,21 @@ async function addProp() {
       const res  = await fetch('/api/scrape?url=' + encodeURIComponent(url));
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      if (props.find(p => p.id === data.id)) { toast('Ya está guardado'); input.value = ''; return; }
-
-      props.unshift({
-        id       : data.id,        url,
-        photo    : data.photo    || null,
-        precio   : data.precio   || '',
-        expensas : data.expensas || '',
-        direccion: data.direccion|| '',
-        barrio   : data.barrio   || '',
-        ambientes: data.ambientes|| null,
-        banos    : data.banos    || null,
-        metros   : data.metros   || null,
-        amenities: data.amenities|| [],
+      const { data: existing } = await db.from('properties').select('id').eq('id', data.id).maybeSingle();
+      if (existing) { toast('Ya está guardado'); input.value = ''; return; }
+      await db.from('properties').insert({
+        id: data.id, url,
+        photo    : data.photo     || null,
+        precio   : data.precio    || null,
+        expensas : data.expensas  || null,
+        direccion: data.direccion || null,
+        barrio   : data.barrio    || null,
+        ambientes: data.ambientes || null,
+        banos    : data.banos     || null,
+        metros   : data.metros    || null,
+        amenities: data.amenities || [],
       });
-      save(props); render(); input.value = '';
+      await render(); input.value = '';
       toast('Depto guardado ✓');
     } catch (e) {
       toast('Error al leer el listing: ' + e.message);
@@ -635,12 +637,12 @@ async function addProp() {
 
   // Fallback for unknown URLs
   const id = parseMLId(url) || ('custom-' + Date.now());
-  if (props.find(p => p.id === id)) { toast('Ya está guardado'); input.value=''; return; }
+  const { data: existing2 } = await db.from('properties').select('id').eq('id', id).maybeSingle();
+  if (existing2) { toast('Ya está guardado'); input.value=''; return; }
   const { barrio, metros } = slugToInfo(url);
-  props.unshift({ id, url, photo: null, precio: '', expensas: '',
-                  direccion: barrio||'', barrio: barrio||'',
-                  banos: null, metros: metros||null, amenities: [] });
-  save(props); render(); input.value = '';
+  await db.from('properties').insert({ id, url, photo: null, precio: null, expensas: null,
+    direccion: barrio||null, barrio: barrio||null, banos: null, metros: metros||null, amenities: [] });
+  await render(); input.value = '';
   toast('Guardado — completá los datos manualmente');
 }
 
@@ -705,110 +707,15 @@ const SEED = [
   },
 ];
 
-function seed() {
-  if (localStorage.getItem('nh5')) return;
-  save(SEED.map(s => ({ ...s })));
-}
-
-// ── MIGRATE ───────────────────────────────────────────────────────────────
-const SEED_V = 11;
-const EXPIRED_IDS = new Set(['MLA3342156356','MLA1763117295','MLA3223276142','MLA1796380613','MLA3218937744']);
-
-function migrate() {
-  const v = parseInt(localStorage.getItem('nh5_v') || '1');
-  if (v >= SEED_V) return;
-  let props = load();
-  const seedMap = Object.fromEntries(SEED.map(s => [s.id, s]));
-  let changed = false;
-
-  if (v < 2) {
-    for (const p of props) {
-      const s = seedMap[p.id];
-      if (!s) continue;
-      if (!p.expensas && s.expensas) { p.expensas = s.expensas; changed = true; }
-    }
-  }
-
-  const before = props.length;
-  props = props.filter(p => !EXPIRED_IDS.has(p.id));
-  if (props.length !== before) changed = true;
-
-  if (v < 4) {
-    for (const p of props) {
-      const s = seedMap[p.id];
-      if (!s) continue;
-      if (!p.ambientes && s.ambientes) { p.ambientes = s.ambientes; changed = true; }
-      if (JSON.stringify(p.amenities) !== JSON.stringify(s.amenities)) { p.amenities = s.amenities; changed = true; }
-    }
-  }
-
-  if (v < 5) {
-    const existingIds = new Set(props.map(p => p.id));
-    for (const s of SEED) {
-      if (!existingIds.has(s.id)) {
-        props.unshift({...s}); changed = true;
-      } else {
-        const p = props.find(x => x.id === s.id);
-        if (!p) continue;
-        for (const f of ['precio','expensas','ambientes','banos','metros','amenities','direccion','barrio']) {
-          if (s[f] !== undefined && JSON.stringify(p[f]) !== JSON.stringify(s[f])) { p[f] = s[f]; changed = true; }
-        }
-        if (!p.photo && s.photo) { p.photo = s.photo; changed = true; }
-      }
-    }
-  }
-
-  if (v < 6) {
-    for (const p of props) {
-      const s = seedMap[p.id];
-      if (s?.photo && p.photo !== s.photo) { p.photo = s.photo; changed = true; }
-    }
-  }
-
-  // v7: add any new SEED entries not yet in localStorage
-  if (v < 7) {
-    const existingIds = new Set(props.map(p => p.id));
-    for (const s of SEED) {
-      if (!existingIds.has(s.id)) { props.unshift({...s}); changed = true; }
-    }
-  }
-
-  // v8: dedup por id (mantiene la primera ocurrencia = la más reciente)
-  if (v < 8) {
-    const seen = new Set();
-    const before8 = props.length;
-    props = props.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
-    if (props.length !== before8) changed = true;
-  }
-
-  // v9: eliminar entries vacíos (sin url ni datos útiles)
-  if (v < 9) {
-    const before9 = props.length;
-    props = props.filter(p => p.url && (p.precio || p.direccion || p.ambientes || p.photo));
-    if (props.length !== before9) changed = true;
-  }
-
-  // v10: restaurar SEED completo (recuperar deptos borrados por el checker erróneo)
-  if (v < 10) {
-    const existingIds = new Set(props.map(p => p.id));
-    for (const s of SEED) {
-      if (!existingIds.has(s.id)) { props.push({...s}); changed = true; }
-    }
-  }
-
-  // v11: reordenar según el nuevo SEED (más reciente primero)
-  if (v < 11) {
-    const seedIds  = SEED.map(s => s.id);            // orden correcto: newest → oldest
-    const propMap  = Object.fromEntries(props.map(p => [p.id, p]));
-    const seedSet  = new Set(seedIds);
-    const nonSeed  = props.filter(p => !seedSet.has(p.id)); // user-added: van primero
-    const seedPart = seedIds.filter(id => propMap[id]).map(id => propMap[id]);
-    props   = [...nonSeed, ...seedPart];
-    changed = true;
-  }
-
-  if (changed) save(props);
-  localStorage.setItem('nh5_v', SEED_V);
+// ── SEED (solo si la tabla está vacía) ───────────────────────────────────
+async function seedIfEmpty() {
+  const { count } = await db.from('properties').select('*', { count: 'exact', head: true });
+  if (count > 0) return;
+  const now = Date.now();
+  const DAY = 86400000;
+  await db.from('properties').insert(
+    SEED.map((s, i) => ({ ...s, amenities: s.amenities || [], created_at: new Date(now - (i + 7) * DAY).toISOString() }))
+  );
 }
 
 // ── TOAST ────────────────────────────────────────────────────────────────
@@ -820,9 +727,11 @@ function toast(msg) {
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────
-seed();
-migrate();
-render();
+(async () => {
+  document.getElementById('grid').innerHTML = '<div class="empty">Cargando…</div>';
+  await seedIfEmpty();
+  await render();
+})();
 </script>
 </body>
 </html>
