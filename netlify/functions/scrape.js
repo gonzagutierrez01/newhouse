@@ -89,28 +89,44 @@ async function scrapeML(url) {
   const id = m ? 'MLA' + m[1] : null;
   if (!id) return null;
 
+  // Googlebot UA: ML sirve el HTML completo con precio, imágenes y specs embebidos en JS
   const res = await fetch(url, {
-    headers: {
-      'User-Agent': BROWSER_UA,
-      'Accept-Language': 'es-AR,es;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
+    headers: { 'User-Agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)' },
   });
   const html = res.ok ? await res.text() : '';
 
-  const photo = extractOgImage(html);
+  // Foto: primer D_NQ_NP del listing (la imagen principal siempre aparece primera)
+  const photoRaw = html.match(/https:\/\/http2\.mlstatic\.com\/D_NQ_NP_[\w-]+\.webp/)?.[0] || null;
+  const photo = photoRaw ? photoRaw.replace('-F-null', '-V') : null;
 
-  // ML es SPA: og:description = og:title (inútil). Usamos título + slug de la URL.
-  const title = extractMeta(html, 'og:title');
-  const slug  = decodeURIComponent(url)
+  // Precio desde JSON embebido: "price":1600,"currency_id":"USD"
+  let precio = null;
+  const priceM = html.match(/"price":(\d+),"currency_id":"([A-Z]+)"/);
+  if (priceM) {
+    const p   = parseInt(priceM[1]);
+    const cur = priceM[2];
+    if (p > 100) precio = `${cur === 'USD' ? 'US$' : '$'}${p.toLocaleString('es-AR')}`;
+  }
+
+  // Baños y metros desde el HTML renderizado
+  const banoM = html.match(/(\d+)\s*[Bb]a[ñn]/);
+  const banos = banoM ? parseInt(banoM[1]) : null;
+
+  const metM  = html.match(/(\d{2,3})\s*m[²2]/);
+  const metros = metM ? parseInt(metM[1]) : null;
+
+  // Barrio, ambientes y amenities desde el slug de la URL
+  const slug = decodeURIComponent(url)
     .split('/').pop()
     .toLowerCase()
     .replace(/_jm.*/i, '')
     .replace(/-/g, ' ');
 
-  const data = parseText([title, slug].join('\n'), id, url);
-  data.photo = photo;
-  // Precio no disponible en HTML estático — el usuario lo completa en localhost
+  const data = parseText(slug, id, url);
+  data.photo  = photo;
+  if (precio)                  data.precio = precio;
+  if (banos  && !data.banos)  data.banos  = banos;
+  if (metros && !data.metros) data.metros = metros;
   return data;
 }
 
