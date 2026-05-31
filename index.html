@@ -390,7 +390,7 @@ function esc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39
 function render() {
   const props = load();
   document.getElementById('grid').innerHTML = props.length
-    ? [...props].reverse().map(cardHTML).join('')
+    ? props.map(cardHTML).join('')
     : `<div class="empty">Pegá el link de un depto para empezar.<br>Los datos se guardan en tu browser.</div>`;
   document.getElementById('count').textContent = props.length ? props.length + (props.length===1?' depto':' deptos') : '';
 }
