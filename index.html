@@ -90,6 +90,17 @@
 
     .card { cursor: pointer; }
 
+    /* DELETE BTN */
+    .del-btn {
+      position: absolute; top: 8px; right: 8px; z-index: 5;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(0,0,0,.45); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s;
+    }
+    .card:hover .del-btn { opacity: 1; }
+    .del-btn:hover { background: rgba(200,30,30,.8); }
+
     /* ADD BAR */
     .add-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -313,7 +324,7 @@ function cardHTML(p) {
   ].filter(Boolean).join('');
 
   return `<div class="card" data-id="${esc(p.id)}" onclick="openListing('${esc(p.url)}',event)">
-  <div class="photo-wrap" id="pw-${esc(p.id)}"
+  <div class="photo-wrap" id="pw-${esc(p.id)}" style="position:relative"
        ondragover="dragOver(event,'${esc(p.id)}')"
        ondragleave="dragLeave('${esc(p.id)}')"
        ondrop="dropPhoto(event,'${esc(p.id)}')">
@@ -322,6 +333,9 @@ function cardHTML(p) {
       ${I.photo}
       <span>Drag foto aquí</span>
     </div>
+    <button class="del-btn" onclick="deleteProp('${esc(p.id)}',event)" title="Eliminar">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
 
   <div class="card-info">
@@ -416,6 +430,14 @@ function showTab(tab) {
   document.getElementById('tab-home').classList.toggle('active', isHome);
   document.getElementById('tab-top5').classList.toggle('active', !isHome);
   if (!isHome) renderTop5();
+}
+
+// ── DELETE PROP ──────────────────────────────────────────────────────────
+function deleteProp(id, event) {
+  event.stopPropagation();
+  const props = load().filter(p => p.id !== id);
+  save(props); render();
+  toast('Depto eliminado');
 }
 
 // ── UPDATE FIELD ─────────────────────────────────────────────────────────
